@@ -6,8 +6,18 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 const PORT = process.env.PORT || 3000;
+const passport = require('./auth');
 
-app.get('/', function (req, res) {
+const logRequest = (req, res, next) => {
+    console.log(`[${new Date().toLocaleString()}] Request made to : ${req.originalUrl}`);
+    next();
+}
+
+app.use(logRequest);
+app.use(passport.initialize());
+
+const localAuthMiddleware = passport.authenticate('local', { session: false })
+app.get('/', logRequest, function (req, res) {
     res.send('Welcome to my hotel... How can help you?')
 })
 
@@ -17,7 +27,7 @@ const menuItemRoutes = require('./routes/menuItemRoutes');
 const usersRoutes = require('./routes/usersRoutes');
 
 //use the routers
-app.use('/parson', parsonRoutes);
+app.use('/parson', localAuthMiddleware, parsonRoutes);
 app.use('/menuItem', menuItemRoutes);
 app.use('/users', usersRoutes);
 
